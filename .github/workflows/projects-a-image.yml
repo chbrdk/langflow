@@ -28,4 +28,4 @@ jobs:
       - name: Make the image readable by the Coolify server
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh api --method PUT "/user/packages/container/langflow/visibility" -f visibility=public
+        run: gh api --method PUT "/users/chbrdk/packages/container/langflow/visibility" -f visibility=public
