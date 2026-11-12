@@ -46,6 +46,7 @@ export function customShouldSkipAuthRefresh(error: AxiosError): boolean {
   if (
     requestUrl.includes("shared-provider-credentials") ||
     requestUrl.includes("project-shares/lookup") ||
+    requestUrl.includes("project-shares/suggestions") ||
     requestUrl.includes("authz/shares")
   ) {
     return true;

@@ -148,6 +148,15 @@ describe("OSS auth customization seams", () => {
     expect(customShouldSkipAuthRefresh(error)).toBe(false);
   });
 
+  it("skips auth refresh when a share suggestion is refused", () => {
+    const error = {
+      config: { url: "/api/v1/project-shares/suggestions" },
+      response: { status: 403, data: { detail: "refused" } },
+    } as unknown as AxiosError;
+
+    expect(customShouldSkipAuthRefresh(error)).toBe(true);
+  });
+
   it("does not skip auth refresh for an unrelated error code", () => {
     const error = {
       response: {

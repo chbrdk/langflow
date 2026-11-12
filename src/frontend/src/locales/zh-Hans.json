@@ -3122,5 +3122,6 @@
   "accountAdmin.error": "That change could not be saved.",
   "accountAdmin.forbidden": "Only a superuser can manage accounts.",
   "accountAdmin.you": "You",
-  "presence.alsoHere": "Also here"
+  "presence.alsoHere": "Also here",
+  "projectShare.suggestions": "Suggestions"
 }

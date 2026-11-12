@@ -15,4 +15,4 @@ git push origin projects-a
 
 `main` bleibt der Upstream-Spiegel. Eigene Änderungen bleiben auf `projects-a`.
 
-Die Schlüssel-Freigabe sitzt in den Einstellungen unter Modellanbieter. Projekte gemeinsam bearbeiten ist der darauf folgende Schritt und gehört nicht in denselben Änderungsblock.
+Welche Dateien uns gehören, welche Tests danach laufen und wann die Python-Erweiterung mitmuss, steht in `knowledge/projects-a.md`.

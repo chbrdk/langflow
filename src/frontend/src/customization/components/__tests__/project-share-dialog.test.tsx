@@ -57,6 +57,11 @@ describe("project sharing in the menus", () => {
       if (url === "/api/v1/project-shares/lookup") {
         return Promise.resolve({ data: { id: "user-2", username: "maria" } });
       }
+      if (String(url).includes("project-shares/suggestions")) {
+        return Promise.resolve({
+          data: { users: [{ id: "user-2", username: "maria" }] },
+        });
+      }
       return Promise.reject(new Error(url));
     });
     mockedApi.post.mockResolvedValue({ data: { id: "share-1" } });
@@ -72,6 +77,9 @@ describe("project sharing in the menus", () => {
 
     await userEvent.click(screen.getByTestId("btn-share-project"));
     expect(await screen.findByText("Share project")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: /maria/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Campaign/)).toBeInTheDocument();
     expect(screen.queryByText("sk-live-secret")).not.toBeInTheDocument();
 

@@ -15,6 +15,7 @@ import { api } from "@/controllers/API/api";
 
 const SHARES_API = "/api/v1/authz/shares/";
 const LOOKUP_API = "/api/v1/project-shares/lookup";
+const SUGGEST_API = "/api/v1/project-shares/suggestions";
 const LEVELS = ["read", "execute", "write", "admin"] as const;
 
 type ShareLevel = (typeof LEVELS)[number];
@@ -30,6 +31,11 @@ interface ShareRow {
 
 interface FlowRecord {
   folder_id?: string | null;
+}
+
+interface SuggestedUser {
+  id: string;
+  username: string;
 }
 
 function statusOf(error: unknown): number | undefined {
@@ -53,6 +59,7 @@ export function ProjectShareDialog({
   const [resolvedProjectId, setResolvedProjectId] = useState(projectId ?? "");
   const [shares, setShares] = useState<ShareRow[]>([]);
   const [username, setUsername] = useState("");
+  const [suggestions, setSuggestions] = useState<SuggestedUser[]>([]);
   const [level, setLevel] = useState<ShareLevel>("write");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -84,6 +91,31 @@ export function ProjectShareDialog({
       cancelled = true;
     };
   }, [open, projectId, flowId]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = window.setTimeout(() => {
+      api
+        .get<{ users?: SuggestedUser[] }>(SUGGEST_API, {
+          params: {
+            q: username,
+            ...(resolvedProjectId ? { resource_id: resolvedProjectId } : {}),
+          },
+        })
+        .then((response) => {
+          const taken = new Set(
+            shares.map((share) => share.target_id).filter(Boolean),
+          );
+          setSuggestions(
+            (response.data.users ?? []).filter(
+              (person) => !taken.has(person.id),
+            ),
+          );
+        })
+        .catch(() => setSuggestions([]));
+    }, 200);
+    return () => window.clearTimeout(handle);
+  }, [open, username, resolvedProjectId, shares]);
 
   const grant = async () => {
     setBusy(true);
@@ -178,6 +210,26 @@ export function ProjectShareDialog({
               required
             />
           </label>
+          {suggestions.length > 0 ? (
+            <ul
+              className="flex flex-col gap-1"
+              aria-label={t("projectShare.suggestions")}
+            >
+              {suggestions.map((person) => (
+                <li key={person.id}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => setUsername(person.username)}
+                  >
+                    {person.username}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <label className="flex flex-col gap-1 text-sm font-medium">
             {t("projectShare.level")}
             <select
