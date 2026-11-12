@@ -42,10 +42,11 @@ export function shouldPullRemoteSave(state: {
   currentFlowId: string | undefined;
   edited: boolean;
   saveLoading: boolean;
+  dragging: boolean;
   conflictFlowId: string | null;
 }): boolean {
   if (!state.flowId || state.currentFlowId !== state.flowId) return false;
-  if (state.edited || state.saveLoading) return false;
+  if (state.edited || state.saveLoading || state.dragging) return false;
   return state.conflictFlowId !== state.flowId;
 }
 

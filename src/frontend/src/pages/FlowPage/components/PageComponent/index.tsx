@@ -45,6 +45,7 @@ import { getURL } from "@/controllers/API/helpers/constants";
 import { useGetBuildsQuery } from "@/controllers/API/queries/_builds";
 import CustomLoader from "@/customization/components/custom-loader";
 import { track } from "@/customization/utils/analytics";
+import { consumePersistSent } from "@/hooks/flows/graph-channel";
 import useApplyFlowToCanvas from "@/hooks/flows/use-apply-flow-to-canvas";
 import useAutoSaveFlow from "@/hooks/flows/use-autosave-flow";
 import { useFlowEvents } from "@/hooks/flows/use-flow-events";
@@ -650,7 +651,7 @@ export default function Page({
   const onNodeDragStop: OnNodeDrag = useCallback(
     (_, node) => {
       // 👇 make moving the canvas undoable
-      autoSaveFlow();
+      if (!consumePersistSent()) autoSaveFlow();
       updateCurrentFlow({ nodes });
       setPositionDictionary({});
       setIsDragging(false);
@@ -728,7 +729,7 @@ export default function Page({
   // handlers, so this wrapper gives them the same undo snapshot + autosave
   // treatment a pointer drag gets.
   const persistKeyboardMove = useCallback(() => {
-    autoSaveFlow();
+    if (!consumePersistSent()) autoSaveFlow();
     updateCurrentFlow({ nodes: useFlowStore.getState().nodes });
   }, [autoSaveFlow, updateCurrentFlow]);
 

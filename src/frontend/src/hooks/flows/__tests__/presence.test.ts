@@ -1,4 +1,9 @@
-import { peopleFromMessage, presenceSocketUrl, shouldPullRemoteSave, visibleFrame } from "../presence";
+import {
+  peopleFromMessage,
+  presenceSocketUrl,
+  shouldPullRemoteSave,
+  visibleFrame,
+} from "../presence";
 
 describe("presence", () => {
   it("turns the camera into the rectangle another person can draw", () => {
@@ -18,13 +23,18 @@ describe("presence", () => {
       currentFlowId: "flow-1",
       edited: false,
       saveLoading: false,
+      dragging: false,
       conflictFlowId: null,
     };
     expect(shouldPullRemoteSave(clean)).toBe(true);
     expect(shouldPullRemoteSave({ ...clean, edited: true })).toBe(false);
     expect(shouldPullRemoteSave({ ...clean, saveLoading: true })).toBe(false);
-    expect(shouldPullRemoteSave({ ...clean, conflictFlowId: "flow-1" })).toBe(false);
-    expect(shouldPullRemoteSave({ ...clean, currentFlowId: "other" })).toBe(false);
+    expect(shouldPullRemoteSave({ ...clean, conflictFlowId: "flow-1" })).toBe(
+      false,
+    );
+    expect(shouldPullRemoteSave({ ...clean, currentFlowId: "other" })).toBe(
+      false,
+    );
   });
 
   it("keeps the cookie on this host and drops a forged person", () => {
@@ -33,8 +43,12 @@ describe("presence", () => {
         protocol: "https:",
         host: "langflow.projects-a.plygrnd.tech",
       }),
-    ).toBe("wss://langflow.projects-a.plygrnd.tech/api/v1/flows/flow-1/presence");
-    expect(peopleFromMessage({ type: "present", people: [{ username: "ada" }] })).toEqual([]);
+    ).toBe(
+      "wss://langflow.projects-a.plygrnd.tech/api/v1/flows/flow-1/presence",
+    );
+    expect(
+      peopleFromMessage({ type: "present", people: [{ username: "ada" }] }),
+    ).toEqual([]);
     expect(
       peopleFromMessage({
         type: "present",

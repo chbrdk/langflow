@@ -19,12 +19,15 @@ jest.mock("@/controllers/API/helpers/constants", () => ({
 
 jest.mock("../presence-sync", () => ({
   adoptRemoteSave: jest.fn(),
+  applyRemoteGraph: jest.fn(),
+  adoptGraphRevision: jest.fn(),
 }));
 
 jest.mock("@/stores/flowStore", () => ({
   __esModule: true,
   default: {
-    getState: () => ({ userEditedSinceLoad: gate.edited }),
+    getState: () => ({ userEditedSinceLoad: gate.edited, nodes: [] }),
+    subscribe: () => () => undefined,
   },
 }));
 

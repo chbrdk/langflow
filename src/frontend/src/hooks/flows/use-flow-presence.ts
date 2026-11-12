@@ -6,6 +6,19 @@ import useFlowStore from "@/stores/flowStore";
 import useFlowsManagerStore from "@/stores/flowsManagerStore";
 import type { FlowType } from "@/types/flow";
 import {
+  bindGraphChannel,
+  isApplyingRemote,
+  noteGraphRejected,
+  publishGraphOps,
+} from "./graph-channel";
+import {
+  diffGraph,
+  type GraphEdge,
+  type GraphNode,
+  isRejectedMessage,
+  opsFromMessage,
+} from "./graph-ops";
+import {
   isRemoteSave,
   type PresenceFrame,
   type PresencePerson,
@@ -13,7 +26,11 @@ import {
   presenceSocketUrl,
   shouldPullRemoteSave,
 } from "./presence";
-import { adoptRemoteSave } from "./presence-sync";
+import {
+  adoptGraphRevision,
+  adoptRemoteSave,
+  applyRemoteGraph,
+} from "./presence-sync";
 
 const VIEW_INTERVAL_MS = 200;
 
@@ -23,6 +40,7 @@ function pullDecision(flowId: string): boolean {
     currentFlowId: useFlowsManagerStore.getState().currentFlowId,
     edited: useFlowStore.getState().userEditedSinceLoad,
     saveLoading: useFlowsManagerStore.getState().saveLoading,
+    dragging: useFlowStore.getState().nodes.some((node) => node.dragging),
     conflictFlowId: useFlowConflictStore.getState().conflict?.flowId ?? null,
   });
 }
@@ -82,6 +100,19 @@ export function useFlowPresence(
         }
         const next = peopleFromMessage(message);
         if (next) setPeople(next);
+        if (isRejectedMessage(message)) {
+          noteGraphRejected();
+          return;
+        }
+        const ops = opsFromMessage(message);
+        if (ops?.kind === "ops") {
+          applyRemoteGraph(ops.ops, ops.versionToken);
+          return;
+        }
+        if (ops?.kind === "revision") {
+          adoptGraphRevision(ops.ops, ops.versionToken);
+          return;
+        }
         if (!isRemoteSave(message) || !pullDecision(flowId)) return;
         api
           .get<FlowType>(`${getURL("FLOWS")}/${flowId}`)
@@ -108,10 +139,38 @@ export function useFlowPresence(
 
     connect();
     window.addEventListener("langflow-flow-saved", onSaved);
+    const previous = {
+      nodes: useFlowStore.getState().nodes as GraphNode[],
+      edges: useFlowStore.getState().edges as GraphEdge[],
+    };
+    const unbind = bindGraphChannel((payload) => {
+      const current = socketRef.current;
+      if (!current || current.readyState !== 1) return false;
+      current.send(JSON.stringify(payload));
+      return true;
+    });
+    const unsubscribe = useFlowStore.subscribe((state) => {
+      const before = {
+        nodes: previous.nodes,
+        edges: previous.edges,
+      };
+      previous.nodes = state.nodes as GraphNode[];
+      previous.edges = state.edges as GraphEdge[];
+      if (isApplyingRemote()) return;
+      const diff = diffGraph(
+        before.nodes,
+        before.edges,
+        state.nodes as GraphNode[],
+        state.edges as GraphEdge[],
+      );
+      publishGraphOps(diff.ephemeral, diff.persisted);
+    });
     return () => {
       stopped = true;
       window.clearTimeout(retry);
       window.removeEventListener("langflow-flow-saved", onSaved);
+      unsubscribe();
+      unbind();
       socket?.close();
       socketRef.current = null;
       setPeople([]);
