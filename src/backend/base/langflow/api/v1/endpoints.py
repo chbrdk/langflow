@@ -116,7 +116,7 @@ from langflow.services.authorization.access_ceiling import (
 from langflow.services.cache.utils import save_uploaded_file
 from langflow.services.database.models.flow.model import Flow, FlowRead
 from langflow.services.database.models.flow.utils import get_all_webhook_components_in_flow
-from langflow.services.database.models.jobs.model import JobType
+from langflow.services.database.models.jobs.model import JobStatus, JobType
 from langflow.services.database.models.user.model import User, UserRead
 from langflow.services.deps import (
     get_catalog_policy_service,
@@ -609,6 +609,14 @@ async def simple_run_flow(
                 # getattr: the warm-run path may hand back a lightweight graph stand-in without
                 # this attribute, matching every other end_user_id read in the codebase.
                 end_user_id=getattr(graph, "end_user_id", None),
+                # IN_PROGRESS from insert, not QUEUED: this run executes HERE, in the API
+                # process, so its row must never enter the scaled worker's QUEUED-claim path
+                # (queued_workflow_job_ids -> claim_queued_lease). A QUEUED row whose create-time
+                # heartbeat expired before the run started was claimed by a worker and re-run with
+                # an empty reconstructed request (LE-3302 F-02). create_job's own docstring
+                # prescribes IN_PROGRESS for a caller that starts the run in the same request;
+                # execute_with_status(mark_in_progress=False) below keeps the single flip.
+                status=JobStatus.IN_PROGRESS,
                 # Live from insert, then kept alive by execute_with_status, so an orphan
                 # sweep cannot fail it mid-run. The run writes no job_metadata of its own.
                 heartbeat=True,
@@ -620,6 +628,8 @@ async def simple_run_flow(
                 task_result, session_id = await _job_svc.execute_with_status(
                     run_id_uuid,
                     run_graph_internal,
+                    # Row was created IN_PROGRESS above; skip the redundant QUEUED->IN_PROGRESS flip.
+                    mark_in_progress=False,
                     keep_alive=True,
                     graph=graph,
                     flow_id=flow_id_str,
