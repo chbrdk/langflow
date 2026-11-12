@@ -1,36 +1,53 @@
 import type { Viewport } from "@xyflow/react";
 
-export type PresenceFrame = {
+export type PresencePointer = {
   x: number;
   y: number;
-  width: number;
-  height: number;
-  zoom: number;
 };
 
-export type PresencePerson = PresenceFrame & {
+export type PresencePerson = PresencePointer & {
   id: string;
   user_id: string;
   username: string;
   color: string;
 };
 
-/** The rectangle another person can draw, in flow coordinates. */
-export function visibleFrame(
+type PaneBox = { left: number; top: number; right: number; bottom: number };
+
+/** Where the mouse is on the canvas, in flow coordinates. */
+export function flowPoint(
+  clientX: number,
+  clientY: number,
+  pane: PaneBox,
   viewport: Pick<Viewport, "x" | "y" | "zoom">,
-  paneWidth: number,
-  paneHeight: number,
-): PresenceFrame | null {
+): PresencePointer | null {
   const { zoom } = viewport;
   if (!Number.isFinite(zoom) || zoom <= 0) return null;
-  if (paneWidth <= 0 || paneHeight <= 0) return null;
-  return {
-    x: -viewport.x / zoom,
-    y: -viewport.y / zoom,
-    width: paneWidth / zoom,
-    height: paneHeight / zoom,
-    zoom,
-  };
+  if (
+    clientX < pane.left ||
+    clientX > pane.right ||
+    clientY < pane.top ||
+    clientY > pane.bottom
+  ) {
+    return null;
+  }
+  const x = (clientX - pane.left - viewport.x) / zoom;
+  const y = (clientY - pane.top - viewport.y) / zoom;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return { x, y };
+}
+
+/** The same point in pixels inside the pane, so the cursor stays one size. */
+export function screenPoint(
+  pointer: PresencePointer,
+  viewport: Pick<Viewport, "x" | "y" | "zoom">,
+): PresencePointer | null {
+  const { zoom } = viewport;
+  if (!Number.isFinite(zoom) || zoom <= 0) return null;
+  const x = pointer.x * zoom + viewport.x;
+  const y = pointer.y * zoom + viewport.y;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return { x, y };
 }
 
 /**
@@ -57,7 +74,7 @@ export function peopleFromMessage(message: unknown): PresencePerson[] | null {
   return row.people.flatMap((item) => {
     if (item === null || typeof item !== "object") return [];
     const person = item as Record<string, unknown>;
-    const numbers = ["x", "y", "width", "height", "zoom"] as const;
+    const numbers = ["x", "y"] as const;
     if (numbers.some((key) => typeof person[key] !== "number")) return [];
     if (typeof person.id !== "string" || typeof person.username !== "string") {
       return [];
@@ -71,9 +88,6 @@ export function peopleFromMessage(message: unknown): PresencePerson[] | null {
         color: typeof person.color === "string" ? person.color : "#0f766e",
         x: person.x as number,
         y: person.y as number,
-        width: person.width as number,
-        height: person.height as number,
-        zoom: person.zoom as number,
       },
     ];
   });

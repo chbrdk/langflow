@@ -78,13 +78,7 @@ class FakeSocket {
 }
 
 function Probe() {
-  const { people } = useFlowPresence("flow-1", () => ({
-    x: 1,
-    y: 2,
-    width: 3,
-    height: 4,
-    zoom: 1,
-  }));
+  const { people } = useFlowPresence("flow-1", () => ({ x: 1, y: 2 }));
   return <div>{people.map((person) => person.username).join(",")}</div>;
 }
 
@@ -96,14 +90,19 @@ describe("useFlowPresence", () => {
     FakeSocket.latest = null;
     (api.get as jest.Mock).mockReset();
     (adoptRemoteSave as jest.Mock).mockReset();
-    (globalThis as { WebSocket: typeof FakeSocket }).WebSocket = FakeSocket as never;
+    (globalThis as { WebSocket: typeof FakeSocket }).WebSocket =
+      FakeSocket as never;
   });
 
   it("shows the other person and pulls a save only while this canvas is clean", async () => {
     (api.get as jest.Mock).mockResolvedValue({ data: { id: "flow-1" } });
     render(<Probe />);
-    await waitFor(() => expect(FakeSocket.latest?.sent[0]).toContain('"type":"view"'));
-    expect(FakeSocket.latest?.url).toBe("ws://localhost/api/v1/flows/flow-1/presence");
+    await waitFor(() =>
+      expect(FakeSocket.latest?.sent[0]).toBe('{"type":"view","x":1,"y":2}'),
+    );
+    expect(FakeSocket.latest?.url).toBe(
+      "ws://localhost/api/v1/flows/flow-1/presence",
+    );
 
     FakeSocket.latest?.onmessage?.({
       data: JSON.stringify({
@@ -132,6 +131,8 @@ describe("useFlowPresence", () => {
 
     gate.edited = false;
     FakeSocket.latest?.onmessage?.({ data: JSON.stringify({ type: "saved" }) });
-    await waitFor(() => expect(adoptRemoteSave).toHaveBeenCalledWith({ id: "flow-1" }));
+    await waitFor(() =>
+      expect(adoptRemoteSave).toHaveBeenCalledWith({ id: "flow-1" }),
+    );
   });
 });

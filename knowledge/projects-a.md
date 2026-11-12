@@ -30,7 +30,7 @@ Dann das Image neu bauen und den Langflow-Service darauf zeigen, wie in der Erwe
 - Projekt- und Flow-Menü: Freigabe an ein Konto dieser Instanz. Ein Flow teilt das Projekt, nicht nur den Flow.
 - Beim Teilen stehen Konten oben, mit denen man schon ein Projekt geteilt hat. Die Suche trifft den Namen.
 - Einstellungen → Benutzer, nur für Superuser: anlegen, aktiv, Superuser, Passwort, löschen. Die eigene Sitzung lässt sich dort nicht aussperren. Die Rolle ist Benutzer oder Superuser, keine Viewer-Rolle.
-- Zeichenfläche: Namen und Ausschnitt der anderen. Gezogene Knoten wandern mit und werden je Knoten in den gespeicherten Graphen gemischt. Wer denselben Knoten festhält, behält ihn bis zum Loslassen.
+- Zeichenfläche: Mauszeiger und Name der anderen, ohne Rahmen um die Ansicht. Gezogene Knoten wandern mit und werden je Knoten in den gespeicherten Graphen gemischt. Wer denselben Knoten festhält, behält ihn bis zum Loslassen.
 
 ## Dateien, die uns gehören
 
@@ -47,10 +47,10 @@ Upstream ändert diese Stellen. Beim Merge unseren Anteil behalten und den neuen
 | `src/frontend/src/pages/SettingsPage/pages/AccountsPage/index.tsx` | Benutzerverwaltung |
 | `src/frontend/src/pages/SettingsPage/use-settings-sidebar-items.tsx` | Eintrag nur für Superuser |
 | `src/frontend/src/routes.tsx` | Route `accounts` |
-| `src/frontend/src/pages/FlowPage/components/flowPresence/index.tsx` | Rahmen und Namen |
+| `src/frontend/src/pages/FlowPage/components/flowPresence/index.tsx` | Mauszeiger und Namen |
 | `src/frontend/src/pages/FlowPage/components/PageComponent/index.tsx` | `FlowPresence` in `ReactFlow`; Speichern einer Bewegung nur, wenn der Kanal sie nicht schon geschrieben hat |
-| `src/frontend/src/hooks/flows/use-flow-presence.ts` | Kanal, Ausschnitt, fremde Änderungen |
-| `src/frontend/src/hooks/flows/presence.ts` | Rechteck und die Regel, wann ein gespeicherter Graph übernommen wird |
+| `src/frontend/src/hooks/flows/use-flow-presence.ts` | Kanal, Zeiger, fremde Änderungen |
+| `src/frontend/src/hooks/flows/presence.ts` | Zeiger in Flow-Koordinaten und die Regel, wann ein gespeicherter Graph übernommen wird |
 | `src/frontend/src/hooks/flows/presence-sync.ts` | Graph übernehmen, ohne die Kamera zu verschieben |
 | `src/frontend/src/hooks/flows/graph-ops.ts` | Bewegungen und Struktur vergleichen und anwenden |
 | `src/frontend/src/hooks/flows/graph-channel.ts` | Senden, solange der Kanal offen ist |

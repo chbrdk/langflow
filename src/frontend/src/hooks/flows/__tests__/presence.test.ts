@@ -1,20 +1,20 @@
 import {
+  flowPoint,
   peopleFromMessage,
   presenceSocketUrl,
+  screenPoint,
   shouldPullRemoteSave,
-  visibleFrame,
 } from "../presence";
 
 describe("presence", () => {
-  it("turns the camera into the rectangle another person can draw", () => {
-    expect(visibleFrame({ x: -100, y: -50, zoom: 2 }, 400, 200)).toEqual({
-      x: 50,
-      y: 25,
-      width: 200,
-      height: 100,
-      zoom: 2,
-    });
-    expect(visibleFrame({ x: 0, y: 0, zoom: 0 }, 400, 200)).toBeNull();
+  it("turns the mouse into a flow point and back into a fixed-size cursor", () => {
+    const pane = { left: 10, top: 20, right: 410, bottom: 220 };
+    const viewport = { x: -100, y: -50, zoom: 2 };
+    const pointer = flowPoint(110, 70, pane, viewport);
+    expect(pointer).toEqual({ x: 100, y: 50 });
+    expect(screenPoint(pointer!, viewport)).toEqual({ x: 100, y: 50 });
+    expect(flowPoint(0, 70, pane, viewport)).toBeNull();
+    expect(flowPoint(110, 70, pane, { x: 0, y: 0, zoom: 0 })).toBeNull();
   });
 
   it("keeps a local edit and an open conflict on this canvas", () => {

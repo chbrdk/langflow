@@ -20,8 +20,8 @@ import {
 } from "./graph-ops";
 import {
   isRemoteSave,
-  type PresenceFrame,
   type PresencePerson,
+  type PresencePointer,
   peopleFromMessage,
   presenceSocketUrl,
   shouldPullRemoteSave,
@@ -32,7 +32,7 @@ import {
   applyRemoteGraph,
 } from "./presence-sync";
 
-const VIEW_INTERVAL_MS = 200;
+const VIEW_INTERVAL_MS = 50;
 
 function pullDecision(flowId: string): boolean {
   return shouldPullRemoteSave({
@@ -45,21 +45,28 @@ function pullDecision(flowId: string): boolean {
   });
 }
 
-/** The other people in this flow, and a way to tell them the camera moved. */
+/** The other people in this flow, and a way to tell them where the pointer is. */
 export function useFlowPresence(
   flowId: string | undefined,
-  readFrame: () => PresenceFrame | null,
+  readPointer: () => PresencePointer | null,
 ): { people: PresencePerson[]; onMove: () => void } {
-  const readFrameRef = useRef(readFrame);
-  readFrameRef.current = readFrame;
+  const readPointerRef = useRef(readPointer);
+  readPointerRef.current = readPointer;
   const socketRef = useRef<WebSocket | null>(null);
+  const lastSent = useRef("");
   const [people, setPeople] = useState<PresencePerson[]>([]);
 
   const sendView = useCallback(() => {
     const socket = socketRef.current;
-    const frame = readFrameRef.current();
-    if (!socket || socket.readyState !== 1 || !frame) return;
-    socket.send(JSON.stringify({ type: "view", ...frame }));
+    if (!socket || socket.readyState !== 1) return;
+    const pointer = readPointerRef.current();
+    const payload = pointer
+      ? { type: "view", x: pointer.x, y: pointer.y }
+      : { type: "view" };
+    const encoded = JSON.stringify(payload);
+    if (encoded === lastSent.current) return;
+    lastSent.current = encoded;
+    socket.send(encoded);
   }, []);
 
   const onMove = useCallback(() => {
@@ -90,7 +97,10 @@ export function useFlowPresence(
       );
       socket = new WebSocket(url);
       socketRef.current = socket;
-      socket.onopen = () => sendView();
+      socket.onopen = () => {
+        lastSent.current = "";
+        sendView();
+      };
       socket.onmessage = (event) => {
         let message: unknown;
         try {
