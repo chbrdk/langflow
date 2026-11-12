@@ -81,6 +81,7 @@ import {
 import { edgeTypes, nodeTypes } from "../../consts";
 import ConnectionLineComponent from "../ConnectionLineComponent";
 import FlowBuildingComponent from "../flowBuildingComponent";
+import { FlowPresence } from "../flowPresence";
 import SelectionMenu from "../SelectionMenuComponent";
 import UpdateAllComponents from "../UpdateAllComponents";
 import { CanvasBadge } from "./components/CanvasBanner";
@@ -1131,6 +1132,7 @@ export default function Page({
                 <MemoizedBackground />
               </div>
               {helperLineEnabled && <HelperLines helperLines={helperLines} />}
+              <FlowPresence />
             </ReactFlow>
             <FlowBuildingComponent />
             {bannerVisible && (

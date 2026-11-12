@@ -3122,5 +3122,6 @@
   "accountAdmin.created": "{{username}} ist angelegt.",
   "accountAdmin.error": "Die Änderung konnte nicht gespeichert werden.",
   "accountAdmin.forbidden": "Nur ein Superuser kann Benutzer verwalten.",
-  "accountAdmin.you": "Du"
+  "accountAdmin.you": "Du",
+  "presence.alsoHere": "Ebenfalls hier"
 }

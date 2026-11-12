@@ -16,6 +16,7 @@ import {
   fetchAndAdoptServerVersion,
   registerConflictState,
 } from "./conflict-actions";
+import { notifyFlowSaved } from "./presence-sync";
 import { FlowSaveBlockedError } from "./save-blocked-error";
 import { buildFlowUpdatePayload, type FlowUpdatePayload } from "./save-payload";
 
@@ -273,6 +274,9 @@ const useSaveFlow = () => {
                   setCurrentFlow(
                     adoptSavedSettings(liveFlow, currentFlow, updatedFlow),
                   );
+                }
+                if ("data" in updatePayload && updatePayload.data) {
+                  notifyFlowSaved(id);
                 }
                 resolve();
               } else {
