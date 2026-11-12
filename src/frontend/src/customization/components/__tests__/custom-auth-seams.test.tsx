@@ -121,6 +121,15 @@ describe("OSS auth customization seams", () => {
     expect(customShouldSkipAuthRefresh(error)).toBe(true);
   });
 
+  it("skips auth refresh when provider sharing refuses this account", () => {
+    const error = {
+      config: { url: "api/v1/shared-provider-credentials" },
+      response: { status: 403, data: { detail: "refused" } },
+    } as unknown as AxiosError;
+
+    expect(customShouldSkipAuthRefresh(error)).toBe(true);
+  });
+
   it("does not skip auth refresh for an unrelated error code", () => {
     const error = {
       response: {

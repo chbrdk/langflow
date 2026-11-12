@@ -40,6 +40,10 @@ function readErrorCode(error: AxiosError): string | undefined {
  * password change); they should keep these codes.
  */
 export function customShouldSkipAuthRefresh(error: AxiosError): boolean {
+  const requestUrl = error.config?.url ?? "";
+  // A refusal here means the signed-in account does not hold the shared keys.
+  // Refreshing the session would log that person out of Settings.
+  if (requestUrl.includes("shared-provider-credentials")) return true;
   const code = readErrorCode(error);
   return code !== undefined && GATED_ERROR_CODES.has(code);
 }
