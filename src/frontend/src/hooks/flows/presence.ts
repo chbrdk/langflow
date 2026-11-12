@@ -5,11 +5,13 @@ export type PresencePointer = {
   y: number;
 };
 
-export type PresencePerson = PresencePointer & {
+export type PresencePerson = {
   id: string;
   user_id: string;
   username: string;
   color: string;
+  x?: number;
+  y?: number;
 };
 
 type PaneBox = { left: number; top: number; right: number; bottom: number };
@@ -74,11 +76,14 @@ export function peopleFromMessage(message: unknown): PresencePerson[] | null {
   return row.people.flatMap((item) => {
     if (item === null || typeof item !== "object") return [];
     const person = item as Record<string, unknown>;
-    const numbers = ["x", "y"] as const;
-    if (numbers.some((key) => typeof person[key] !== "number")) return [];
     if (typeof person.id !== "string" || typeof person.username !== "string") {
       return [];
     }
+    const x = person.x;
+    const y = person.y;
+    const hasX = typeof x === "number";
+    const hasY = typeof y === "number";
+    if (hasX !== hasY) return [];
     return [
       {
         id: person.id,
@@ -86,8 +91,7 @@ export function peopleFromMessage(message: unknown): PresencePerson[] | null {
           typeof person.user_id === "string" ? person.user_id : person.id,
         username: person.username,
         color: typeof person.color === "string" ? person.color : "#0f766e",
-        x: person.x as number,
-        y: person.y as number,
+        ...(hasX ? { x: x as number, y: y as number } : {}),
       },
     ];
   });

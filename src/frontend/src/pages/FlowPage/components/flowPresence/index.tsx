@@ -1,8 +1,8 @@
-import { useOnViewportChange, type Viewport } from "@xyflow/react";
+import { useViewport, ViewportPortal } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { flowPoint, screenPoint } from "@/hooks/flows/presence";
+import { flowPoint } from "@/hooks/flows/presence";
 import { useFlowPresence } from "@/hooks/flows/use-flow-presence";
 import useFlowStore from "@/stores/flowStore";
 
@@ -11,49 +11,54 @@ export function FlowPresence() {
   const { t } = useTranslation();
   const flowId = useFlowStore((state) => state.currentFlow?.id);
   const instance = useFlowStore((state) => state.reactFlowInstance);
+  const viewport = useViewport();
   const lastClient = useRef<{ x: number; y: number } | null>(null);
-  const [viewport, setViewport] = useState<Viewport | null>(null);
+  const [host, setHost] = useState<HTMLElement | null>(null);
   const { people, onMove } = useFlowPresence(flowId, () => {
-    const camera = instance?.getViewport();
+    const camera = instance?.getViewport() ?? viewport;
     const pane = document.getElementById("react-flow-id");
     const point = lastClient.current;
     if (!camera || !pane || !point) return null;
     return flowPoint(point.x, point.y, pane.getBoundingClientRect(), camera);
   });
 
-  useOnViewportChange({
-    onChange: (next) => {
-      setViewport(next);
-      onMove();
-    },
-  });
+  useEffect(() => {
+    setHost(document.getElementById("react-flow-id"));
+  }, []);
 
   useEffect(() => {
-    const pane = document.getElementById("react-flow-id");
-    if (!pane) return;
     const move = (event: PointerEvent) => {
+      const pane = document.getElementById("react-flow-id");
+      if (!pane) return;
+      const rect = pane.getBoundingClientRect();
+      const inside =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+      if (!inside) {
+        if (lastClient.current === null) return;
+        lastClient.current = null;
+        onMove();
+        return;
+      }
       lastClient.current = { x: event.clientX, y: event.clientY };
       onMove();
     };
-    const leave = () => {
-      lastClient.current = null;
-      onMove();
-    };
-    pane.addEventListener("pointermove", move);
-    pane.addEventListener("pointerleave", leave);
-    return () => {
-      pane.removeEventListener("pointermove", move);
-      pane.removeEventListener("pointerleave", leave);
-    };
+    window.addEventListener("pointermove", move, true);
+    return () => window.removeEventListener("pointermove", move, true);
   }, [onMove]);
 
+  useEffect(() => {
+    onMove();
+  }, [viewport.x, viewport.y, viewport.zoom, onMove]);
+
   const names = [...new Set(people.map((person) => person.username))];
-  const host = document.getElementById("react-flow-id");
-  const camera = viewport ?? instance?.getViewport() ?? null;
+  const zoom = viewport.zoom > 0 ? viewport.zoom : 1;
   const roster =
     names.length === 0 ? null : (
       <div
-        className="pointer-events-none absolute top-16 left-3 z-50 flex items-center gap-2 rounded-md border bg-background px-2 py-1 text-xs shadow-sm"
+        className="pointer-events-none absolute top-16 left-3 z-[80] flex items-center gap-2 rounded-md border bg-background px-2 py-1 text-xs shadow-sm"
         aria-label={t("presence.alsoHere")}
       >
         <span>{t("presence.alsoHere")}</span>
@@ -62,17 +67,24 @@ export function FlowPresence() {
         ))}
       </div>
     );
-  const cursors =
-    camera === null
-      ? null
-      : people.map((person) => {
-          const point = screenPoint(person, camera);
-          if (!point) return null;
+
+  return (
+    <>
+      <ViewportPortal>
+        {people.map((person) => {
+          if (typeof person.x !== "number" || typeof person.y !== "number") {
+            return null;
+          }
           return (
             <div
               key={person.id}
-              className="pointer-events-none absolute z-50"
-              style={{ left: point.x, top: point.y }}
+              className="pointer-events-none absolute"
+              style={{
+                left: person.x,
+                top: person.y,
+                transform: `scale(${1 / zoom})`,
+                transformOrigin: "0 0",
+              }}
             >
               <svg
                 width="16"
@@ -96,14 +108,9 @@ export function FlowPresence() {
               </span>
             </div>
           );
-        });
-
-  const layer = (
-    <>
-      {cursors}
-      {roster}
+        })}
+      </ViewportPortal>
+      {host && roster ? createPortal(roster, host) : null}
     </>
   );
-
-  return host ? createPortal(layer, host) : null;
 }

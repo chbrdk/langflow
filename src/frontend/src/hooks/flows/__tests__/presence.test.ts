@@ -52,6 +52,12 @@ describe("presence", () => {
     expect(
       peopleFromMessage({
         type: "present",
+        people: [{ id: "c1", username: "ada" }],
+      })?.[0].username,
+    ).toBe("ada");
+    expect(
+      peopleFromMessage({
+        type: "present",
         people: [
           {
             id: "c1",
