@@ -1,9 +1,9 @@
+# The live instance is built by Coolify from Dockerfile.projects-a.
+# ghcr.io/chbrdk/langflow stays private, so this workflow is manual only.
+
 name: projects-a image
 
 on:
-  push:
-    branches:
-      - projects-a
   workflow_dispatch:
 
 jobs:
@@ -25,7 +25,3 @@ jobs:
           file: Dockerfile.projects-a
           push: true
           tags: ghcr.io/chbrdk/langflow:projects-a
-      - name: Make the image readable by the Coolify server
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh api --method PUT "/users/chbrdk/packages/container/langflow/visibility" -f visibility=public
