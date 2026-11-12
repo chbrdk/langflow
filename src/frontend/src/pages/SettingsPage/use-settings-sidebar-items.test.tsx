@@ -95,7 +95,21 @@ describe("useSettingsSidebarItems", () => {
     const hrefs = result.current.map((item) => item.href);
 
     expect(hrefs[2]).toBe("/settings/custom-store");
-    expect(hrefs.at(-2)).toBe("/settings/messages");
+    expect(hrefs.at(-3)).toBe("/settings/messages");
+    expect(hrefs.at(-2)).toBe("/settings/accounts");
     expect(hrefs.at(-1)).toBe("/settings/migration");
+  });
+
+  it("shows Accounts only for a superuser", () => {
+    const hidden = renderHook(() => useSettingsSidebarItems());
+    expect(hidden.result.current.map((item) => item.href)).not.toContain(
+      "/settings/accounts",
+    );
+
+    mockIsSuperuser = true;
+    const shown = renderHook(() => useSettingsSidebarItems());
+    expect(shown.result.current.map((item) => item.href)).toContain(
+      "/settings/accounts",
+    );
   });
 });

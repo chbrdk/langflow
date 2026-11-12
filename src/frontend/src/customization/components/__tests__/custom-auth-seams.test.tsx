@@ -130,6 +130,24 @@ describe("OSS auth customization seams", () => {
     expect(customShouldSkipAuthRefresh(error)).toBe(true);
   });
 
+  it("skips auth refresh when account administration refuses the change", () => {
+    const error = {
+      config: { url: "/api/v1/users/user-2" },
+      response: { status: 403, data: { detail: "refused" } },
+    } as unknown as AxiosError;
+
+    expect(customShouldSkipAuthRefresh(error)).toBe(true);
+  });
+
+  it("still refreshes when the account list itself has no session", () => {
+    const error = {
+      config: { url: "/api/v1/users/whoami" },
+      response: { status: 401, data: { detail: "missing" } },
+    } as unknown as AxiosError;
+
+    expect(customShouldSkipAuthRefresh(error)).toBe(false);
+  });
+
   it("does not skip auth refresh for an unrelated error code", () => {
     const error = {
       response: {

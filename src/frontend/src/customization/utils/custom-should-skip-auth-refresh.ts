@@ -50,6 +50,14 @@ export function customShouldSkipAuthRefresh(error: AxiosError): boolean {
   ) {
     return true;
   }
+  // A refused account change is a permission answer, not an expired session.
+  if (
+    requestUrl.includes("/api/v1/users/") &&
+    !requestUrl.includes("whoami") &&
+    error.response?.status === 403
+  ) {
+    return true;
+  }
   const code = readErrorCode(error);
   return code !== undefined && GATED_ERROR_CODES.has(code);
 }

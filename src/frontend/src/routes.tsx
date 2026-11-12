@@ -32,6 +32,7 @@ import KnowledgePage from "./pages/MainPage/pages/knowledgePage";
 import SourceChunksPage from "./pages/MainPage/pages/knowledgePage/sourceChunksPage/SourceChunksPage";
 import CollectionPage from "./pages/MainPage/pages/main-page";
 import SettingsPage from "./pages/SettingsPage";
+import AccountsPage from "./pages/SettingsPage/pages/AccountsPage";
 import ApiKeysPage from "./pages/SettingsPage/pages/ApiKeysPage";
 import ConnectionsPage from "./pages/SettingsPage/pages/ConnectionsPage";
 import DBProvidersPage from "./pages/SettingsPage/pages/DBProvidersPage";
@@ -155,6 +156,7 @@ const router = createBrowserRouter(
                     path="model-providers"
                     element={<ModelProvidersPage />}
                   />
+                  <Route path="accounts" element={<AccountsPage />} />
                   <Route path="db-providers" element={<DBProvidersPage />} />
                   <Route path="mcp-servers" element={<MCPServersPage />} />
                   <Route path="connections" element={<ConnectionsPage />} />
