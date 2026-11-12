@@ -1,14 +1,19 @@
-import type { PermissionResourceType } from "@/types/permissions";
+import { ProjectShareMenuItem } from "@/customization/components/project-share-dialog";
 
 interface CustomFlowShareActionProps {
   resourceId: string;
-  resourceType: PermissionResourceType;
+  resourceType: string;
   resourceName?: string;
-  /** Placement hint for overlays: the editor's Share dropdown may use a longer label. */
   menuContext?: "card" | "editor";
 }
 
-// OSS no-op; the Enterprise overlay replaces this with the Share menu item + dialog.
-export default function CustomFlowShareAction(_: CustomFlowShareActionProps) {
-  return null;
+export default function CustomFlowShareAction({
+  resourceId,
+  resourceType,
+  resourceName,
+}: CustomFlowShareActionProps) {
+  if (resourceType !== "flow") return null;
+  return (
+    <ProjectShareMenuItem flowId={resourceId} resourceName={resourceName} />
+  );
 }

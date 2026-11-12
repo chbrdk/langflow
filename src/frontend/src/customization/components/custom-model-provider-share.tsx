@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { api } from "@/controllers/API/api";
 import { cn } from "@/utils/utils";
 
-const SHARE_API = "api/v1/shared-provider-credentials";
+const SHARE_API = "/api/v1/shared-provider-credentials";
 
 interface ProviderField {
   label?: string;

@@ -99,7 +99,7 @@ describe("CustomModelProviderShare", () => {
 
     await waitFor(() =>
       expect(mockedApi.put).toHaveBeenCalledWith(
-        "api/v1/shared-provider-credentials",
+        "/api/v1/shared-provider-credentials",
         { share_with_everyone: true },
       ),
     );

@@ -41,9 +41,15 @@ function readErrorCode(error: AxiosError): string | undefined {
  */
 export function customShouldSkipAuthRefresh(error: AxiosError): boolean {
   const requestUrl = error.config?.url ?? "";
-  // A refusal here means the signed-in account does not hold the shared keys.
-  // Refreshing the session would log that person out of Settings.
-  if (requestUrl.includes("shared-provider-credentials")) return true;
+  // A refusal here means the signed-in account may not share this resource.
+  // Refreshing the session would log that person out.
+  if (
+    requestUrl.includes("shared-provider-credentials") ||
+    requestUrl.includes("project-shares/lookup") ||
+    requestUrl.includes("authz/shares")
+  ) {
+    return true;
+  }
   const code = readErrorCode(error);
   return code !== undefined && GATED_ERROR_CODES.has(code);
 }

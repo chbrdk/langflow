@@ -1,0 +1,31 @@
+name: projects-a image
+
+on:
+  push:
+    branches:
+      - projects-a
+  workflow_dispatch:
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.projects-a
+          push: true
+          tags: ghcr.io/chbrdk/langflow:projects-a
+      - name: Make the image readable by the Coolify server
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api --method PUT "/user/packages/container/langflow/visibility" -f visibility=public

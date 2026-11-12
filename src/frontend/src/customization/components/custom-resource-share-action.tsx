@@ -1,3 +1,5 @@
+import { ProjectShareMenuItem } from "@/customization/components/project-share-dialog";
+
 export type CustomShareResourceType =
   | "deployment"
   | "project"
@@ -15,10 +17,13 @@ export interface CustomResourceShareActionProps {
   display?: "icon" | "label" | "menu";
 }
 
-// OSS no-op. Enterprise replaces this seam with share administration for
-// non-flow resources while preserving the OSS navigation and action layouts.
-export default function CustomResourceShareAction(
-  _: CustomResourceShareActionProps,
-) {
-  return null;
+export default function CustomResourceShareAction({
+  resourceId,
+  resourceType,
+  resourceName,
+}: CustomResourceShareActionProps) {
+  if (resourceType !== "project") return null;
+  return (
+    <ProjectShareMenuItem projectId={resourceId} resourceName={resourceName} />
+  );
 }

@@ -62,7 +62,7 @@ describe("OSS auth customization seams", () => {
     const { container } = render(
       <CustomResourceShareAction
         resourceId="resource-1"
-        resourceType="project"
+        resourceType="file"
         resourceName="Project one"
       />,
     );
